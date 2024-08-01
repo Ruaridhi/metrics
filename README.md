@@ -147,3 +147,4 @@ The `AddMetric` component posts log data to the back-end API at `http://localhos
 
 - I have had to do a few tradeoffs to respect the timeline for this tech test. For simplicity, I decided to create the app using Create React App (CRA). While this sped up the initial set up, it caused issues while testing. I kept left the tests I created, but I have not been able to run them locally
 - This app exclusively works locally
+- As part of a team, I would have had more descriptive and small commits and would have used PRs.
