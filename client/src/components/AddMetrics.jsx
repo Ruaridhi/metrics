@@ -10,75 +10,48 @@ export default function AddMetric() {
     value: '',
   });
 
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (metric.id) {
       const sendLogs = async () => {
-        await postLogs();
+        try {
+          await axios.post('http://localhost:5000/logs', {
+            id: metric.id,
+            timestamp: metric.timestamp,
+            name: metric.name,
+            value: metric.value,
+          });
+          setError('');
+        } catch (e) {
+          setError(e);
+        }
       };
       sendLogs();
     }
-  }, [metric]);
+  }, [metric.id]); // Depend only on metric.id
 
-  const postLogs = async () => {
-    try {
-      await axios.post('http://localhost:5000/logs', {
-        id: metric.id,
-        timestamp: metric.timestamp,
-        name: metric.name,
-        value: metric.value,
-      });
-      setError(false);
-    } catch (e) {
-      setError(e);
-    }
-  };
+  const randomDate = () => {
+    // Generates a random date and date between 30 July 2024 and 31 July 2024
+    const month = 7;
+    const year = 2024;
+    const date = Math.random() < 0.5 ? 30 : 31; // Randomly pick between 30 and 31
+    const hours = Math.floor(Math.random() * 24);
+    const minutes = Math.floor(Math.random() * 60);
 
-  function randomDate() {
-    // forces month to be July
-    let month = 7;
-    // forces month to be 2024
-    let year = 2024;
-    //generates random date between 1-31
-    let date = Math.floor(Math.random() * (31 - 30 + 1)) + 30;
-    // generates random hour between 0-23
-    let hours = Math.floor(Math.random() * 24);
-    // generates random minute between 0-59
-    let minutes = Math.floor(Math.random() * 60);
+    const randomDate = new Date(year, month - 1, date, hours, minutes);
 
-    let randomDate = new Date(year, month - 1, date, hours, minutes);
-
-    let formattedDate =
+    const formattedDate =
       randomDate.toISOString().slice(0, 19).replace('T', ' ') + '.000 +0200';
-
     return formattedDate;
-  }
-
-  const handleSendErrorLog = async () => {
-    setMetric({
-      id: v4(),
-      timestamp: randomDate(),
-      name: 'error',
-      value: 'error msg',
-    });
   };
 
-  const handleSendLog = async () => {
+  const handleSendMetric = (name) => async () => {
     setMetric({
       id: v4(),
       timestamp: randomDate(),
-      name: 'log',
-      value: 'log msg',
-    });
-  };
-
-  const handleSendWarningLog = async () => {
-    setMetric({
-      id: v4(),
-      timestamp: randomDate(),
-      name: 'warning',
-      value: 'warning msg',
+      name: name,
+      value: `${name} msg`,
     });
   };
 
@@ -90,28 +63,26 @@ export default function AddMetric() {
         </h1>
         <div className="flex items-center gap-4 mb-4">
           <button
-            onClick={handleSendErrorLog}
+            onClick={handleSendMetric('error')}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
             Send Test Error Log
           </button>
           <button
-            onClick={handleSendLog}
+            onClick={handleSendMetric('log')}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             Send Test Log
           </button>
           <button
-            onClick={handleSendWarningLog}
+            onClick={handleSendMetric('warning')}
             className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
           >
             Send Test Warning Log
           </button>
         </div>
         {error && (
-          <div className="mt-4 text-red-600">
-            Error occurred: {error.message}
-          </div>
+          <div className="mt-4 text-red-600">Error occurred: {error}</div>
         )}
       </div>
     </div>

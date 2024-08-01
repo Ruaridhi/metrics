@@ -1,65 +1,60 @@
-// import React from 'react';
-// import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-// import '@testing-library/jest-dom/extend-expect';
-// import { server } from './server'; // Import the MSW server
-// import { rest } from 'msw';
-// import AddMetric from './AddMetric';
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import { server } from './server';
+import { rest } from 'msw';
+import AddMetric from './AddMetric';
 
-// beforeAll(() => server.listen());
+beforeAll(() => server.listen());
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
-// afterEach(() => server.resetHandlers());
+test('renders AddMetric component and sends error log without error', async () => {
+  render(<AddMetric />);
 
-// afterAll(() => server.close());
+  const errorButton = screen.getByText('Send Test Error Log');
+  fireEvent.click(errorButton);
 
-// test('renders AddMetric component and sends error log', async () => {
-//   render(<AddMetric />);
+  await waitFor(() => {
+    expect(screen.queryByText(/Error occurred:/)).toBeNull();
+  });
+});
 
-//   const errorButton = screen.getByText('Send Test Error Log');
-//   fireEvent.click(errorButton);
+test('handles server error on sending log', async () => {
+  server.use(
+    rest.post('http://localhost:5000/logs', (req, res, ctx) => {
+      return res(ctx.status(500), ctx.json({ message: 'Internal Server Error' }));
+    })
+  );
 
-//   await waitFor(() => {
-//     expect(screen.queryByText(/Error occurred:/)).toBeNull();
-//   });
-// });
+  render(<AddMetric />);
 
-// test('handles error on sending log', async () => {
-//   server.use(
-//     rest.post('http://localhost:5000/logs', (req, res, ctx) => {
-//       return res(
-//         ctx.status(500),
-//         ctx.json({ message: 'Internal Server Error' })
-//       );
-//     })
-//   );
+  const errorButton = screen.getByText('Send Test Error Log');
+  fireEvent.click(errorButton);
 
-//   render(<AddMetric />);
+  await waitFor(() => {
+    expect(screen.getByText(/Error occurred:/)).toBeInTheDocument();
+  });
+});
 
-//   const errorButton = screen.getByText('Send Test Error Log');
-//   fireEvent.click(errorButton);
+test('renders AddMetric component and sends warning log without error', async () => {
+  render(<AddMetric />);
 
-//   await waitFor(() => {
-//     expect(screen.getByText(/Error occurred:/)).toBeInTheDocument();
-//   });
-// });
+  const warningButton = screen.getByText('Send Test Warning Log');
+  fireEvent.click(warningButton);
 
-// test('renders AddMetric component and sends warning log', async () => {
-//   render(<AddMetric />);
+  await waitFor(() => {
+    expect(screen.queryByText(/Error occurred:/)).toBeNull();
+  });
+});
 
-//   const warningButton = screen.getByText('Send Test Warning Log');
-//   fireEvent.click(warningButton);
+test('renders AddMetric component and sends log without error', async () => {
+  render(<AddMetric />);
 
-//   await waitFor(() => {
-//     expect(screen.queryByText(/Error occurred:/)).toBeNull();
-//   });
-// });
+  const logButton = screen.getByText('Send Test Log');
+  fireEvent.click(logButton);
 
-// test('renders AddMetric component and sends log', async () => {
-//   render(<AddMetric />);
-
-//   const logButton = screen.getByText('Send Test Log');
-//   fireEvent.click(logButton);
-
-//   await waitFor(() => {
-//     expect(screen.queryByText(/Error occurred:/)).toBeNull();
-//   });
-// });
+  await waitFor(() => {
+    expect(screen.queryByText(/Error occurred:/)).toBeNull();
+  });
+});
