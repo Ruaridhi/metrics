@@ -26,3 +26,11 @@ export const queryLogsPerMinute = async () => {
     ORDER BY name, DATE_TRUNC('minute', timestamp);
   `);
 };
+
+export const addLog = async (id, timestamp, name, value) => {
+  const query =
+    'INSERT into logs (id, timestamp, name, value) VALUES($1, $2, $3, $4) RETURNING *';
+  const values = [id, timestamp, name, value];
+
+  return await db.query(query, values);
+};

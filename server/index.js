@@ -5,6 +5,7 @@ import {
   queryLogsPerHour,
   queryLogsPerMinute,
   queryLogsPerDay,
+  addLog,
 } from './queries.js';
 
 const app = express();
@@ -52,11 +53,7 @@ app.post('/logs', async (req, res) => {
     return res.status(400).send('Bad Request: Missing required fields');
   }
   try {
-    const query =
-      'INSERT into logs (id, timestamp, name, value) VALUES($1, $2, $3, $4) RETURNING *';
-    const values = [id, timestamp, name, value];
-
-    const result = await db.query(query, values);
+    const result = await addLog();
 
     // result.rows[0] contains the newly inserted row
     return res.status(201).json(result.rows[0]);
@@ -65,8 +62,18 @@ app.post('/logs', async (req, res) => {
   }
 });
 
-const server = app.listen(5000, () => {
-  console.log('metrics app running');
-});
+let server;
+const startServer = (port = 5000) => {
+  server = app.listen(port, () => {
+    console.log(`metrics app running on port ${port}`);
+  });
+  return server;
+};
 
-export default { app, server };
+const stopServer = () => {
+  if (server) {
+    server.close();
+  }
+};
+
+export { app, startServer, stopServer };
